@@ -1,0 +1,29 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudwatch:ListMetrics",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:Describe*",
+                "ec2:Describe*",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams",
+                "ssm:Describe*",
+                "ssm:Get*",
+                "ssm:List*",
+                "ssm:Update*",
+                "ssm:Put*",
+                "kms:Decrypt",
+                "cloudformation:SignalResource",
+                "s3:Get*",
+                "s3:List*",
+                "s3:Put*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

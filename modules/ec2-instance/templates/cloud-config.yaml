@@ -1,0 +1,43 @@
+#cloud-config
+%{~ if secondary_block_device ~}
+disk_setup:
+  /dev/xvdf:
+    type: mbr
+    layout:
+        - 100
+    overwrite: False
+
+bootcmd:
+  - counter=0; while [ ! -b /dev/xvdf ]; do counter=$((counter+1)); printf "%s not found, tried %ds out of 300\n" "/dev/xvdf" $counter; if [ $counter -ge 300 ]; then printf "Did not find %s" "/dev/xvdf"; exit 1; else sleep 1; fi; done
+
+fs_setup:
+  - label: OPT
+    filesystem: ext4
+    device: /dev/xvdf1
+    partition: auto
+
+mounts:
+  - [ /dev/xvdf1, /opt, ext4, "defaults", "0", "0" ]
+%{~ endif ~}
+
+apt_update: ${apt_update}
+apt_upgrade: ${apt_upgrade}
+
+packages:
+  - awscli
+  - libssl-dev
+  - libffi-dev
+  - python3-pip
+  - curl
+
+runcmd:
+  - /usr/bin/pip install ansible==${ansible_version}
+  - /usr/bin/git clone -b ${git_version} https://github.com/vsmac/ansible.git /opt/ansible
+  - env ANSIBLE_LOCAL_TEMP=$HOME/.ansible/tmp ANSIBLE_REMOTE_TEMP=$HOME/.ansible/tmp /usr/local/bin/ansible-playbook -c local -i localhost,  /opt/ansible/swap.yaml
+  - env ANSIBLE_LOCAL_TEMP=$HOME/.ansible/tmp ANSIBLE_REMOTE_TEMP=$HOME/.ansible/tmp /usr/local/bin/ansible-playbook -c local -i localhost,  /opt/ansible/ssm-agent.yaml
+  - env ANSIBLE_LOCAL_TEMP=$HOME/.ansible/tmp ANSIBLE_REMOTE_TEMP=$HOME/.ansible/tmp /usr/local/bin/ansible-playbook -c local -i localhost,  /opt/ansible/cloudwatch-agent.yaml
+
+%{~ if reboot_after_bootstrap ~}
+power_state:
+  mode: reboot
+%{~ endif ~}
